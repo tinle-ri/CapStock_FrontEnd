@@ -11,11 +11,6 @@ backend is a single WebSocket connection.
 
 ## Status
 
-- ✅ Static dashboard UI (watchlist grid, sparklines, expandable trend chart)
-- ✅ Mocked WebSocket layer (`mockSocket` in `app.js`) standing in for the real backend
-- ⬜ Real WebSocket client — swap in once the backend's Phoenix Channel layer exists
-- ⬜ Framework decision (vanilla JS vs. React) — currently vanilla, pending team sign-off
-
 ## Running locally
 
 No build step. Just serve the directory:
