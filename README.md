@@ -1,82 +1,59 @@
-# Capstock — Frontend
+# Capstock Dashboard (React + Chart.js)
 
-Single-page dashboard for **Capstock**, a real-time stock ticker viewer built for TCSS 360.
-Displays live price data for a fixed watchlist (AAPL, MSFT, GOOGL, AMZN, TSLA) with per-ticker
-sparklines and an expandable trend chart.
+Real-time stock ticker dashboard for Capstock (TCSS 360). Loads initial data
+from the REST endpoint, then stays live over the Phoenix `stocks:live`
+WebSocket channel.
 
-This repo is intentionally decoupled from the backend
-([`stock_fetcher-CapStock_BACKEND`](https://github.com/dxu13UW/stock_fetcher-CapStock_BACKEND)).
-The frontend never talks to Finnhub or the database directly — its only contract with the
-backend is a single WebSocket connection.
-
-## Status
-
-## Running locally
-
-No build step. Just serve the directory:
+## Setup
 
 ```bash
-npx serve .
-# or
-python3 -m http.server 8080
+npm install
+npm run dev
 ```
 
-Then open the printed URL. Right now it runs entirely on fake data — see **Mock data** below.
+Runs on `http://localhost:5173` by default. Requires the backend (Docker)
+running and reachable — see `src/config.js` for the API/WS URLs, or set
+`VITE_API_URL` / `VITE_WS_URL` in a `.env` file to point elsewhere.
 
-## Project structure
+## What's wired up
+
+- **Initial load**: `GET /api/stocks` on mount, grouped by ticker.
+- **Live updates**: joins `stocks:live`, listens for price ticks, appends
+  each to a capped rolling history per ticker (`HISTORY_LIMIT` in
+  `config.js`) that feeds both the current price and the Chart.js sparkline.
+- **Flash animation**: `StockCard` compares each new price to the previous
+  one and flashes green/red for ~900ms on change.
+- **Connection status**: pill in the header reflects socket connect/
+  disconnect state.
+
+## Three things to verify against the real `StockChannel` before demoing
+
+These were filled in based on commit messages, not the actual channel
+source, so double-check:
+
+1. **`src/hooks/useStockSocket.js`** — the live-update event name is
+   assumed to be `"new_price"`. If the channel's `push/3` call uses a
+   different event string, update the `channel.on('new_price', ...)` line.
+2. **`src/App.jsx`** (join snapshot effect) — assumed the join payload is
+   either a flat array of rows or `{ data: [...rows] }`, matching the REST
+   shape. If `join/3` sends something else, adjust the parsing there.
+3. **`request_historical`** — `useStockSocket` exposes
+   `requestHistorical(ticker, limit)` and listens for a `"historical_data"`
+   response, but nothing calls it yet (the REST load covers initial
+   history). Wire it up if you want on-demand deeper history per ticker,
+   and confirm the response event name matches.
+
+## Structure
 
 ```
-.
-├── index.html      # page shell / markup
-├── styles.css       # all styling — dark, monospace-forward, terminal-inspired
-└── app.js          # Stock / StockCard / WatchlistPanel / App classes + mock socket
+src/
+  api.js              REST fetch + group-by-ticker
+  config.js           API/WS URLs, ticker list, history length
+  hooks/
+    useStockSocket.js Phoenix socket + channel connection
+  components/
+    WatchlistPanel.jsx grid of StockCard
+    StockCard.jsx       ticker, price, delta, sparkline, flash
+  App.jsx              wires REST + socket into shared state
+  main.jsx             entry point
 ```
-
-The JS classes mirror the project's UML class diagram:
-
-| Class            | Responsibility                                      |
-|------------------|------------------------------------------------------|
-| `Stock`          | Data model for one ticker (price, history, deltas)    |
-| `StockCard`      | Renders one ticker tile + sparkline                   |
-| `WatchlistPanel` | Owns the grid of `StockCard`s                         |
-| `DetailPanel`    | Renders the expanded trend chart for a selected ticker|
-| `App`            | Page wiring — owns the socket connection and state    |
-
-## WebSocket protocol
-
-The frontend and backend agree on this message contract (see `app.js` / `mockSocket` for the
-mocked version of the backend side):
-
-1. **Backend → client**, on connect:
-   ```json
-   { "type": "sync_check", "tickers": ["AAPL", "..."], "freshness_threshold_seconds": 60 }
-   ```
-2. **Client → backend**, reporting what it already has:
-   ```json
-   { "type": "sync_status", "have_data": false, "last_seen": { "AAPL": null, "...": "..." } }
-   ```
-3. **Backend → client**, if stale/missing, one bulk catch-up payload:
-   ```json
-   { "type": "bulk_sync", "data": [ { "inserted_at": "...", "name": "AAPL", "price": 317.31 } ] }
-   ```
-4. **Backend → client**, live stream entries after that:
-   ```json
-   { "type": "price_update", "inserted_at": "...", "name": "AAPL", "price": 317.31 }
-   ```
-
-Payloads intentionally carry **only** frontend-relevant fields (`name`, `price`, `inserted_at`) —
-no upstream API details, retry/backoff state, or database internals ever cross the socket.
-
-## Swapping in the real backend
-
-Once the backend exposes a real Phoenix Channel, replace the `mockSocket` object in `app.js`
-with a real client that calls the same three handlers (`onSyncCheck`, `onBulkSync`,
-`onPriceUpdate`) — nothing else in `App`, `WatchlistPanel`, `StockCard`, or `DetailPanel` needs
-to change.
-
-## Related requirements (SRS §3.3)
-
-- REQ-FRONT-01 — Live ticker view with price, change, last-updated
-- REQ-FRONT-02 — Automatic updates on broadcast, no manual refresh
-- REQ-FRONT-03 — Trend chart for an individually selected ticker
-- REQ-FRONT-04 — No authentication required (v1.0)
