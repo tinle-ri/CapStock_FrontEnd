@@ -1,59 +1,31 @@
-# Capstock Dashboard (React + Chart.js)
+# CapStock Frontend
 
-Real-time stock ticker dashboard for Capstock (TCSS 360). Loads initial data
-from the REST endpoint, then stays live over the Phoenix `stocks:live`
-WebSocket channel.
+React dashboard for the CapStock project (TCSS 360). Pulls stock data from the backend and shows it live using websockets.
 
-## Setup
+## Running it
 
-```bash
 npm install
 npm run dev
-```
 
-Runs on `http://localhost:5173` by default. Requires the backend (Docker)
-running and reachable — see `src/config.js` for the API/WS URLs, or set
-`VITE_API_URL` / `VITE_WS_URL` in a `.env` file to point elsewhere.
+Goes to localhost:5173. Backend needs to be running in Docker for this to actually show data (change the urls in src/config.js if backend isn't on localhost:4000).
 
-## What's wired up
+## How it works
 
-- **Initial load**: `GET /api/stocks` on mount, grouped by ticker.
-- **Live updates**: joins `stocks:live`, listens for price ticks, appends
-  each to a capped rolling history per ticker (`HISTORY_LIMIT` in
-  `config.js`) that feeds both the current price and the Chart.js sparkline.
-- **Flash animation**: `StockCard` compares each new price to the previous
-  one and flashes green/red for ~900ms on change.
-- **Connection status**: pill in the header reflects socket connect/
-  disconnect state.
+- Loads stocks from `/api/stocks` when the page loads
+- Connects to the `stocks:live` channel for live price updates
+- Cards flash green/red when price changes
+- Chart.js sparkline on each card showing recent price history
 
-## Three things to verify against the real `StockChannel` before demoing
+## TODO / things to check
 
-These were filled in based on commit messages, not the actual channel
-source, so double-check:
+- Not 100% sure the websocket event name is right (`new_price`) - need to check against what the channel actually sends
+- Same with the join payload format, guessed the shape based on the REST response
+- request_historical isn't hooked up to anything yet, just exists in the hook
 
-1. **`src/hooks/useStockSocket.js`** — the live-update event name is
-   assumed to be `"new_price"`. If the channel's `push/3` call uses a
-   different event string, update the `channel.on('new_price', ...)` line.
-2. **`src/App.jsx`** (join snapshot effect) — assumed the join payload is
-   either a flat array of rows or `{ data: [...rows] }`, matching the REST
-   shape. If `join/3` sends something else, adjust the parsing there.
-3. **`request_historical`** — `useStockSocket` exposes
-   `requestHistorical(ticker, limit)` and listens for a `"historical_data"`
-   response, but nothing calls it yet (the REST load covers initial
-   history). Wire it up if you want on-demand deeper history per ticker,
-   and confirm the response event name matches.
+## Files
 
-## Structure
-
-```
-src/
-  api.js              REST fetch + group-by-ticker
-  config.js           API/WS URLs, ticker list, history length
-  hooks/
-    useStockSocket.js Phoenix socket + channel connection
-  components/
-    WatchlistPanel.jsx grid of StockCard
-    StockCard.jsx       ticker, price, delta, sparkline, flash
-  App.jsx              wires REST + socket into shared state
-  main.jsx             entry point
-```
+- api.js - fetches from REST endpoint
+- config.js - urls and settings
+- hooks/useStockSocket.js - websocket connection stuff
+- components/StockCard.jsx, WatchlistPanel.jsx
+- App.jsx - ties it together
