@@ -39,13 +39,13 @@ export default function App() {
     socket.onError(() => setStatus('disconnected'));
     socket.onClose(() => setStatus('disconnected'));
 
-    // NOTE: SRS Appendix C says the real topic is "stocks:broadcasts",
+    // NOTE: SRS Appendix C says the real topic is "stocks:live",
     // not "stocks:live" - double check this against stock_channel.ex
-    const ch = socket.channel('stocks:broadcasts', {});
+    const ch = socket.channel('stocks:live', {});
 
     ch.join()
-      .receive('ok', () => console.log('[App] joined stocks:broadcasts'))
-      .receive('error', () => console.log('[App] could not join stocks:broadcasts'));
+      .receive('ok', () => console.log('[App] joined stocks:live'))
+      .receive('error', () => console.log('[App] could not join stocks:live'));
 
     ch.on('new_price', (payload) => {
       const { ticker, price, timestamp } = payload;
