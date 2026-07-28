@@ -1,68 +1,91 @@
 import { useEffect, useState } from 'react';
-import WatchlistPanel from './components/WatchlistPanel';
-import { useStockSocket } from './hooks/useStockSocket';
+import { Socket } from 'phoenix';
+import WatchlistTable from './components/WatchlistTable';
+import TrendChart from './components/TrendChart';
 import { fetchStocks } from './api';
-import { TICKERS, HISTORY_LIMIT } from './config';
+import { TICKERS, HISTORY_LIMIT, WS_URL } from './config';
 
 function emptyState() {
-  return Object.fromEntries(TICKERS.map((t) => [t, []]));
-}
-
-function appendCapped(list, point) {
-  const next = [...list, point];
-  return next.length > HISTORY_LIMIT ? next.slice(next.length - HISTORY_LIMIT) : next;
+  const state = {};
+  TICKERS.forEach((t) => (state[t] = []));
+  return state;
 }
 
 export default function App() {
   const [data, setData] = useState(emptyState);
+  const [status, setStatus] = useState('connecting');
   const [loadError, setLoadError] = useState(null);
-  const { status, snapshot, lastUpdate } = useStockSocket();
+  const [selected, setSelected] = useState(null);
+  const [channel, setChannel] = useState(null);
 
-  // Initial paint: REST call, independent of the socket connecting.
+  // initial load, doesn't need the socket to be connected first
   useEffect(() => {
     fetchStocks()
       .then((byTicker) => {
         setData((prev) => ({ ...prev, ...byTicker }));
-        setLoadError(null);
       })
-      .catch((err) => setLoadError(err.message));
+      .catch((err) => {
+        console.log('[App] failed to load initial stocks:', err.message);
+        setLoadError(err.message);
+      });
   }, []);
 
-  // If the channel pushes its own hydration snapshot on join, fold it in too.
-  // NOTE: verify this shape against what StockFetcherWeb.StockChannel actually
-  // sends in join/3 — assumed here to be either { data: [...] } like the REST
-  // response, or a flat array of rows. Adjust if it differs.
+  // socket connection for live price updates
   useEffect(() => {
-    if (!snapshot) return;
-    const rows = Array.isArray(snapshot) ? snapshot : snapshot.data ?? [];
-    if (rows.length === 0) return;
+    const socket = new Socket(WS_URL);
+    socket.connect();
 
-    setData((prev) => {
-      const next = { ...prev };
-      for (const row of rows) {
-        const list = next[row.ticker] ? [...next[row.ticker]] : [];
-        if (!list.some((p) => p.timestamp === row.timestamp)) {
-          list.push({ price: row.price, timestamp: row.timestamp });
+    socket.onOpen(() => setStatus('connected'));
+    socket.onError(() => setStatus('disconnected'));
+    socket.onClose(() => setStatus('disconnected'));
+
+    // NOTE: SRS Appendix C says the real topic is "stocks:broadcasts",
+    // not "stocks:live" - double check this against stock_channel.ex
+    const ch = socket.channel('stocks:broadcasts', {});
+
+    ch.join()
+      .receive('ok', () => console.log('[App] joined stocks:broadcasts'))
+      .receive('error', () => console.log('[App] could not join stocks:broadcasts'));
+
+    ch.on('new_price', (payload) => {
+      const { ticker, price, timestamp } = payload;
+
+      setData((prev) => {
+        const history = prev[ticker] || [];
+        const updated = [...history, { price, timestamp }];
+
+        // keep the array from growing forever
+        if (updated.length > HISTORY_LIMIT) {
+          updated.shift();
         }
-        next[row.ticker] = list.sort(
-          (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
-        );
-      }
-      return next;
+
+        return { ...prev, [ticker]: updated };
+      });
     });
-  }, [snapshot]);
 
-  // Live ticks pushed from :new_price broadcasts.
+    // response to a request_historical push - replaces that ticker's
+    // history with whatever deeper range the backend sends back
+    ch.on('historical_data', (payload) => {
+      const { ticker, prices } = payload;
+      if (!ticker || !prices) return;
+
+      setData((prev) => ({ ...prev, [ticker]: prices }));
+    });
+
+    setChannel(ch);
+
+    return () => {
+      ch.leave();
+      socket.disconnect();
+    };
+  }, []);
+
+  // when the user selects a ticker, ask the backend for deeper history
+  // for that one (REQ-FRONT-03 - trend chart for the selected ticker)
   useEffect(() => {
-    if (!lastUpdate) return;
-    const { ticker, price, timestamp } = lastUpdate;
-    if (!ticker) return;
-
-    setData((prev) => ({
-      ...prev,
-      [ticker]: appendCapped(prev[ticker] ?? [], { price, timestamp }),
-    }));
-  }, [lastUpdate]);
+    if (!selected || !channel) return;
+    channel.push('request_historical', { ticker: selected, limit: HISTORY_LIMIT });
+  }, [selected, channel]);
 
   return (
     <div className="app">
@@ -80,11 +103,12 @@ export default function App() {
       {loadError && (
         <div className="error-banner">
           Couldn't load initial data ({loadError}). Live updates will still
-          appear once the socket connects.
+          show up once the socket connects.
         </div>
       )}
 
-      <WatchlistPanel data={data} />
+      <WatchlistTable data={data} selected={selected} onSelect={setSelected} />
+      <TrendChart ticker={selected} history={selected ? data[selected] : null} />
     </div>
   );
 }

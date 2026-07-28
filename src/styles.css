@@ -108,62 +108,82 @@ body {
   margin-bottom: 1.5rem;
 }
 
-.watchlist {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 1rem;
-}
-
-.stock-card {
-  position: relative;
+.watchlist-table {
+  width: 100%;
+  border-collapse: collapse;
   background: var(--panel);
   border: 1px solid var(--panel-border);
   border-radius: 14px;
-  padding: 1.1rem 1.1rem 0.9rem;
   overflow: hidden;
-  transition: border-color 0.2s ease;
+  margin-bottom: 1.5rem;
 }
 
-.stock-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: transparent;
+.watchlist-table th {
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.watchlist-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.watchlist-table tbody tr {
+  cursor: pointer;
   transition: background 0.15s ease;
 }
 
-.stock-card[data-flash='up']::before {
-  background: var(--up);
+.watchlist-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
 }
 
-.stock-card[data-flash='down']::before {
-  background: var(--down);
+.watchlist-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
-.stock-card-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-bottom: 0.6rem;
+.watchlist-table tr.selected-row {
+  background: rgba(124, 156, 255, 0.08);
 }
 
-.stock-ticker {
+.ticker-cell {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.05rem;
   letter-spacing: 0.02em;
+}
+
+.price-cell {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.05rem;
+  transition: color 0.2s ease;
+}
+
+.price-cell[data-flash='up'] {
+  color: var(--up);
+}
+
+.price-cell[data-flash='down'] {
+  color: var(--down);
+}
+
+.timestamp-cell {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }
 
 .stock-delta {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   padding: 0.15rem 0.4rem;
   border-radius: 6px;
   color: var(--text-muted);
-  background: rgba(255, 255, 255, 0.03);
 }
 
 .stock-delta[data-direction='up'] {
@@ -176,32 +196,31 @@ body {
   background: rgba(248, 113, 113, 0.1);
 }
 
-.stock-price {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  font-size: 1.6rem;
-  font-weight: 500;
-  margin-bottom: 0.65rem;
-  transition: color 0.2s ease;
+.trend-chart {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  padding: 1.25rem;
 }
 
-.stock-price[data-flash='up'] {
-  color: var(--up);
+.trend-chart h2 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  margin: 0 0 1rem;
 }
 
-.stock-price[data-flash='down'] {
-  color: var(--down);
+.trend-chart-canvas {
+  height: 240px;
 }
 
-.stock-chart {
-  height: 56px;
-}
-
-.stock-timestamp {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
+.trend-chart-placeholder {
   color: var(--text-muted);
-  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  border: 1px dashed var(--panel-border);
+  border-radius: 14px;
+  padding: 2rem;
+  text-align: center;
 }
 
 .empty-state {
