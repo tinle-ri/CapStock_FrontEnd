@@ -39,8 +39,6 @@ export default function App() {
     socket.onError(() => setStatus('disconnected'));
     socket.onClose(() => setStatus('disconnected'));
 
-    // NOTE: SRS Appendix C says the real topic is "stocks:live",
-    // not "stocks:live" - double check this against stock_channel.ex
     const ch = socket.channel('stocks:live', {});
 
     ch.join()
@@ -63,15 +61,6 @@ export default function App() {
       });
     });
 
-    // response to a request_historical push - replaces that ticker's
-    // history with whatever deeper range the backend sends back
-    ch.on('historical_data', (payload) => {
-      const { ticker, prices } = payload;
-      if (!ticker || !prices) return;
-
-      setData((prev) => ({ ...prev, [ticker]: prices }));
-    });
-
     setChannel(ch);
 
     return () => {
@@ -84,7 +73,17 @@ export default function App() {
   // for that one (REQ-FRONT-03 - trend chart for the selected ticker)
   useEffect(() => {
     if (!selected || !channel) return;
-    channel.push('request_historical', { ticker: selected, limit: HISTORY_LIMIT });
+
+    channel.push('request_historical', { limit: HISTORY_LIMIT })
+      .receive('ok', ({ data }) => {
+        // TEMP: backend doesn't filter by ticker yet (stock_channel.ex request_historical) —
+        // remove this .filter() once that's fixed server-side
+        const filtered = data.filter((row) => row.ticker === selected);
+        setData((prev) => ({ ...prev, [selected]: filtered }));
+      })
+      .receive('error', (err) => {
+        console.log('[App] request_historical failed:', err);
+      });
   }, [selected, channel]);
 
   return (
