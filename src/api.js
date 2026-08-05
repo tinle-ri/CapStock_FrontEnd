@@ -1,7 +1,8 @@
 import { API_BASE } from './config';
 
-// Grabs recent prices from the backend REST endpoint and groups them
-// by ticker since the API just returns a flat list of rows.
+// backend now returns data pre-grouped by ticker:
+// { data: { AAPL: [...], MSFT: [...], ... } }
+// each ticker's array is a list of { ticker, price, timestamp } points
 export async function fetchStocks() {
   const res = await fetch(`${API_BASE}/api/stocks`);
 
@@ -12,14 +13,11 @@ export async function fetchStocks() {
   const { data } = await res.json();
   const byTicker = {};
 
-  for (const row of data) {
-    if (!byTicker[row.ticker]) byTicker[row.ticker] = [];
-    byTicker[row.ticker].push(row);
-  }
-
-  // oldest first so the chart draws left to right
-  for (const ticker in byTicker) {
-    byTicker[ticker].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  for (const ticker in data) {
+    // oldest first so the chart draws left to right
+    byTicker[ticker] = [...data[ticker]].sort(
+      (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+    );
   }
 
   return byTicker;
