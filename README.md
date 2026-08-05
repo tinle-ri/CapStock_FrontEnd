@@ -1,82 +1,32 @@
-# Capstock — Frontend
+# CapStock Frontend
 
-Single-page dashboard for **Capstock**, a real-time stock ticker viewer built for TCSS 360.
-Displays live price data for a fixed watchlist (AAPL, MSFT, GOOGL, AMZN, TSLA) with per-ticker
-sparklines and an expandable trend chart.
+React dashboard for the CapStock project (TCSS 360). Table of tracked tickers with live price updates, click a row to see its trend chart.
 
-This repo is intentionally decoupled from the backend
-([`stock_fetcher-CapStock_BACKEND`](https://github.com/dxu13UW/stock_fetcher-CapStock_BACKEND)).
-The frontend never talks to Finnhub or the database directly — its only contract with the
-backend is a single WebSocket connection.
-
-## Status
-
-## Running locally
-
-No build step. Just serve the directory:
-
-```bash
-npx serve .
-# or
-python3 -m http.server 8080
-```
-
-Then open the printed URL. Right now it runs entirely on fake data — see **Mock data** below.
-
-## Project structure
+## Running it
 
 ```
-.
-├── index.html      # page shell / markup
-├── styles.css       # all styling — dark, monospace-forward, terminal-inspired
-└── app.js          # Stock / StockCard / WatchlistPanel / App classes + mock socket
+npm install
+npm run dev
 ```
 
-The JS classes mirror the project's UML class diagram:
+Goes to localhost:5173. Backend needs to be running in Docker for this to actually show data (change the urls in src/config.js if backend isn't on localhost:4000).
 
-| Class            | Responsibility                                      |
-|------------------|------------------------------------------------------|
-| `Stock`          | Data model for one ticker (price, history, deltas)    |
-| `StockCard`      | Renders one ticker tile + sparkline                   |
-| `WatchlistPanel` | Owns the grid of `StockCard`s                         |
-| `DetailPanel`    | Renders the expanded trend chart for a selected ticker|
-| `App`            | Page wiring — owns the socket connection and state    |
+## How it works
 
-## WebSocket protocol
+- Loads stocks from `/api/stocks` on page load, shown as a table (ticker, price, change, last updated) per SRS REQ-FRONT-01
+- Connects to the `stocks:broadcasts` channel for live price pushes (`new_price` events)
+- Clicking a row selects that ticker and shows a trend chart below the table (REQ-FRONT-03), and asks the backend for deeper history via `request_historical`
+- Price cells flash green/red based on last tick direction
 
-The frontend and backend agree on this message contract (see `app.js` / `mockSocket` for the
-mocked version of the backend side):
+## TODO / things to check
 
-1. **Backend → client**, on connect:
-   ```json
-   { "type": "sync_check", "tickers": ["AAPL", "..."], "freshness_threshold_seconds": 60 }
-   ```
-2. **Client → backend**, reporting what it already has:
-   ```json
-   { "type": "sync_status", "have_data": false, "last_seen": { "AAPL": null, "...": "..." } }
-   ```
-3. **Backend → client**, if stale/missing, one bulk catch-up payload:
-   ```json
-   { "type": "bulk_sync", "data": [ { "inserted_at": "...", "name": "AAPL", "price": 317.31 } ] }
-   ```
-4. **Backend → client**, live stream entries after that:
-   ```json
-   { "type": "price_update", "inserted_at": "...", "name": "AAPL", "price": 317.31 }
-   ```
+- Channel topic was changed from `stocks:live` to `stocks:broadcasts` based on SRS Appendix C - still needs confirming against the actual `stock_channel.ex`
+- `historical_data` response shape is assumed to be `{ ticker, prices }` - not confirmed against backend
 
-Payloads intentionally carry **only** frontend-relevant fields (`name`, `price`, `inserted_at`) —
-no upstream API details, retry/backoff state, or database internals ever cross the socket.
+## Files
 
-## Swapping in the real backend
-
-Once the backend exposes a real Phoenix Channel, replace the `mockSocket` object in `app.js`
-with a real client that calls the same three handlers (`onSyncCheck`, `onBulkSync`,
-`onPriceUpdate`) — nothing else in `App`, `WatchlistPanel`, `StockCard`, or `DetailPanel` needs
-to change.
-
-## Related requirements (SRS §3.3)
-
-- REQ-FRONT-01 — Live ticker view with price, change, last-updated
-- REQ-FRONT-02 — Automatic updates on broadcast, no manual refresh
-- REQ-FRONT-03 — Trend chart for an individually selected ticker
-- REQ-FRONT-04 — No authentication required (v1.0)
+- api.js - fetches from REST endpoint
+- config.js - urls and settings
+- components/WatchlistTable.jsx - the ticker table
+- components/TrendChart.jsx - chart for the selected ticker
+- App.jsx - socket connection, state, ties it together

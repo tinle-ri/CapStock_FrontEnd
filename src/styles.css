@@ -1,0 +1,234 @@
+:root {
+  --bg: #0b0e14;
+  --panel: #12161f;
+  --panel-border: #1f2530;
+  --text: #e7eaf0;
+  --text-muted: #6b7280;
+  --accent: #7c9cff;
+  --up: #34d399;
+  --down: #f87171;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-body: 'Inter', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+.app {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+.app-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.app-header h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.75rem;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.app-header .subtitle {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.status-pill[data-status='connected'] .status-dot {
+  background: var(--up);
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.15);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.status-pill[data-status='disconnected'] .status-dot {
+  background: var(--down);
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.error-banner {
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: rgba(248, 113, 113, 0.08);
+  color: #fca5a5;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+}
+
+.watchlist-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.watchlist-table th {
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.watchlist-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.watchlist-table tbody tr {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.watchlist-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.watchlist-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.watchlist-table tr.selected-row {
+  background: rgba(124, 156, 255, 0.08);
+}
+
+.ticker-cell {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.price-cell {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.05rem;
+  transition: color 0.2s ease;
+}
+
+.price-cell[data-flash='up'] {
+  color: var(--up);
+}
+
+.price-cell[data-flash='down'] {
+  color: var(--down);
+}
+
+.timestamp-cell {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.stock-delta {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  color: var(--text-muted);
+}
+
+.stock-delta[data-direction='up'] {
+  color: var(--up);
+  background: rgba(52, 211, 153, 0.1);
+}
+
+.stock-delta[data-direction='down'] {
+  color: var(--down);
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.trend-chart {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  padding: 1.25rem;
+}
+
+.trend-chart h2 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  margin: 0 0 1rem;
+}
+
+.trend-chart-canvas {
+  height: 240px;
+}
+
+.trend-chart-placeholder {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  border: 1px dashed var(--panel-border);
+  border-radius: 14px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.empty-state {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  border: 1px dashed var(--panel-border);
+  border-radius: 10px;
+  padding: 2rem;
+  text-align: center;
+}
