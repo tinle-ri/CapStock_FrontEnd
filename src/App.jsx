@@ -4,11 +4,16 @@ import WatchlistTable from './components/WatchlistTable';
 import TrendChart from './components/TrendChart';
 import { fetchStocks } from './api';
 import { TICKERS, HISTORY_LIMIT, WS_URL } from './config';
+import { isMarketOpen, hoursUntilNextOpen } from './marketHours';
 
 function emptyState() {
   const state = {};
   TICKERS.forEach((t) => (state[t] = []));
   return state;
+}
+
+function hasAnyData(data) {
+  return Object.values(data).some((history) => history.length > 0);
 }
 
 export default function App() {
@@ -17,6 +22,17 @@ export default function App() {
   const [loadError, setLoadError] = useState(null);
   const [selected, setSelected] = useState(null);
   const [channel, setChannel] = useState(null);
+  const [marketOpen, setMarketOpen] = useState(isMarketOpen());
+
+  // re-check every minute so the banner updates itself around the
+  // open/close boundary without needing a page refresh
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMarketOpen(isMarketOpen());
+    }, 60_000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Initial REST hydration call -> maps to StockController.index/2
   useEffect(() => {
@@ -103,6 +119,14 @@ export default function App() {
         <div className="error-banner">
           Couldn't load initial data ({loadError}). Live updates will still
           show up once the socket connects.
+        </div>
+      )}
+
+      {!marketOpen && !hasAnyData(data) && (
+        <div className="market-closed-banner">
+          Markets are closed right now — reopens in about{' '}
+          {hoursUntilNextOpen()} hours. Prices won't update until the
+          worker resumes polling.
         </div>
       )}
 

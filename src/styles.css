@@ -108,6 +108,17 @@ body {
   margin-bottom: 1.5rem;
 }
 
+.market-closed-banner {
+  border: 1px solid rgba(124, 156, 255, 0.3);
+  background: rgba(124, 156, 255, 0.06);
+  color: #a8bcff;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+  font-family: var(--font-mono);
+}
+
 .watchlist-table {
   width: 100%;
   border-collapse: collapse;

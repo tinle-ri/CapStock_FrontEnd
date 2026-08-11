@@ -7,7 +7,8 @@ export default function WatchlistTable({ data, selected, onSelect }) {
   if (!hasData) {
     return (
       <div className="empty-state">
-        Waiting for price data — check that the backend and Docker are running.
+        No price data yet — check the connection status above, or markets
+        may be closed.
       </div>
     );
   }
