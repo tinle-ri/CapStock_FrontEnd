@@ -4,11 +4,16 @@ import WatchlistTable from './components/WatchlistTable';
 import TrendChart from './components/TrendChart';
 import { fetchStocks } from './api';
 import { TICKERS, HISTORY_LIMIT, WS_URL } from './config';
+import { isMarketOpen, hoursUntilNextOpen } from './marketHours';
 
 function emptyState() {
   const state = {};
   TICKERS.forEach((t) => (state[t] = []));
   return state;
+}
+
+function hasAnyData(data) {
+  return Object.values(data).some((history) => history.length > 0);
 }
 
 export default function App() {
@@ -17,6 +22,17 @@ export default function App() {
   const [loadError, setLoadError] = useState(null);
   const [selected, setSelected] = useState(null);
   const [channel, setChannel] = useState(null);
+  const [marketOpen, setMarketOpen] = useState(isMarketOpen());
+
+  // re-check every minute so the banner updates itself around the
+  // open/close boundary without needing a page refresh
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMarketOpen(isMarketOpen());
+    }, 60_000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // initial load, doesn't need the socket to be connected first
   useEffect(() => {
@@ -70,14 +86,16 @@ export default function App() {
   }, []);
 
   // when the user selects a ticker, ask the backend for deeper history
-  // for that one (REQ-FRONT-03 - trend chart for the selected ticker)
+  // for that one (REQ-FRONT-03 - trend chart for the selected ticker).
+  // the reply comes back on the push itself, not a separate event.
   useEffect(() => {
     if (!selected || !channel) return;
 
     channel.push('request_historical', { limit: HISTORY_LIMIT })
       .receive('ok', ({ data }) => {
-        // TEMP: backend doesn't filter by ticker yet (stock_channel.ex request_historical) —
-        // remove this .filter() once that's fixed server-side
+        // TEMP: backend doesn't filter by ticker yet (stock_channel.ex
+        // request_historical) - remove this .filter() once that's fixed
+        // server-side
         const filtered = data.filter((row) => row.ticker === selected);
         setData((prev) => ({ ...prev, [selected]: filtered }));
       })
@@ -103,6 +121,14 @@ export default function App() {
         <div className="error-banner">
           Couldn't load initial data ({loadError}). Live updates will still
           show up once the socket connects.
+        </div>
+      )}
+
+      {!marketOpen && !hasAnyData(data) && (
+        <div className="market-closed-banner">
+          Markets are closed right now — reopens in about{' '}
+          {hoursUntilNextOpen()} hours. Prices won't update until the
+          worker resumes polling.
         </div>
       )}
 
