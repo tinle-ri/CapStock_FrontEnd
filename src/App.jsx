@@ -34,7 +34,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // initial load, doesn't need the socket to be connected first
+  // Initial REST hydration call -> maps to StockController.index/2
   useEffect(() => {
     fetchStocks()
       .then((byTicker) => {
@@ -46,7 +46,7 @@ export default function App() {
       });
   }, []);
 
-  // socket connection for live price updates
+  // Phoenix WebSocket connection for real-time price ticks
   useEffect(() => {
     const socket = new Socket(WS_URL);
     socket.connect();
@@ -55,12 +55,14 @@ export default function App() {
     socket.onError(() => setStatus('disconnected'));
     socket.onClose(() => setStatus('disconnected'));
 
-    const ch = socket.channel('stocks:live', {});
+    // Connects to StockFetcherWeb.StockChannel via topic "stocks:mock"
+    const ch = socket.channel('stocks:mock', {});
 
     ch.join()
-      .receive('ok', () => console.log('[App] joined stocks:live'))
-      .receive('error', () => console.log('[App] could not join stocks:live'));
+      .receive('ok', () => console.log('[App] joined stocks:mock'))
+      .receive('error', () => console.log('[App] could not join stocks:mock'));
 
+    // Listens for PubSub broadcasts emitted by StockFetcher.Mock.Streamer
     ch.on('new_price', (payload) => {
       const { ticker, price, timestamp } = payload;
 
@@ -68,7 +70,7 @@ export default function App() {
         const history = prev[ticker] || [];
         const updated = [...history, { price, timestamp }];
 
-        // keep the array from growing forever
+        // Bound array size to HISTORY_LIMIT
         if (updated.length > HISTORY_LIMIT) {
           updated.shift();
         }
@@ -85,17 +87,13 @@ export default function App() {
     };
   }, []);
 
-  // when the user selects a ticker, ask the backend for deeper history
-  // for that one (REQ-FRONT-03 - trend chart for the selected ticker).
-  // the reply comes back on the push itself, not a separate event.
+  // Triggers StockChannel.handle_in("request_historical", ...) on selection
   useEffect(() => {
     if (!selected || !channel) return;
 
-    channel.push('request_historical', { limit: HISTORY_LIMIT })
+    channel
+      .push('request_historical', { limit: HISTORY_LIMIT })
       .receive('ok', ({ data }) => {
-        // TEMP: backend doesn't filter by ticker yet (stock_channel.ex
-        // request_historical) - remove this .filter() once that's fixed
-        // server-side
         const filtered = data.filter((row) => row.ticker === selected);
         setData((prev) => ({ ...prev, [selected]: filtered }));
       })
