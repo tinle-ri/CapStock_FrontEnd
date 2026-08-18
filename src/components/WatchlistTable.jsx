@@ -47,14 +47,13 @@ export default function WatchlistTable({
               </tr>
             );
           }
-
-          const previous =
-            history.length > 1 ? history[history.length - 2] : null;
-          const delta = previous ? latest.price - previous.price : 0;
+          const openPrice = history[0].price;
+          const delta = latest.price - openPrice;
+          const percentDelta = openPrice > 0 ? (delta / openPrice) * 100 : 0;
 
           let direction = null;
-          if (delta > 0) direction = "up";
-          if (delta < 0) direction = "down";
+          if (delta > 0.001) direction = "up";
+          if (delta < -0.001) direction = "down";
 
           return (
             <tr
@@ -73,11 +72,14 @@ export default function WatchlistTable({
                   </span>
                 ) : direction ? (
                   <span className="stock-delta" data-direction={direction}>
-                    {direction === "up" ? "▲" : "▼"}{" "}
-                    {Math.abs(delta).toFixed(2)}
+                    {direction === "up" ? "▲" : "▼"} $
+                    {Math.abs(delta).toFixed(2)} (
+                    {Math.abs(percentDelta).toFixed(2)}%)
                   </span>
                 ) : (
-                  <span style={{ color: "var(--text-muted)" }}>--</span>
+                  <span style={{ color: "var(--text-muted)" }}>
+                    $0.00 (0.00%)
+                  </span>
                 )}
               </td>
               <td className="timestamp-cell">
