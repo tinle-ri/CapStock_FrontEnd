@@ -63,7 +63,7 @@ export default function WatchlistTable({
               onClick={() => onSelect(ticker)}
             >
               <td className="ticker-cell">{ticker}</td>
-              <td className="price-cell" data-flash={direction}>
+              <td className="price-cell" data-flash={marketOpen ? direction : null}>
                 ${latest.price.toFixed(2)}
               </td>
               <td>
