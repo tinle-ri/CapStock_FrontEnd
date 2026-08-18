@@ -4,7 +4,7 @@ import { API_BASE } from './config';
 // { data: { AAPL: [...], MSFT: [...], ... } }
 // each ticker's array is a list of { ticker, price, timestamp } points
 export async function fetchStocks() {
-  const res = await fetch(`${API_BASE}/api/stocks?mock=true`);
+  const res = await fetch(`${API_BASE}/api/stocks`);
 
   if (!res.ok) {
     throw new Error(`GET /api/stocks failed: ${res.status}`);
