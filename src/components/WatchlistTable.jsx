@@ -1,4 +1,4 @@
-// table of tracked tickers - price, change, last updated
+﻿// table of tracked tickers - price, change, last updated
 // clicking a row selects that ticker for the trend chart (REQ-FRONT-03)
 
 import { hoursUntilNextOpen } from "../marketHours";
@@ -62,7 +62,7 @@ export default function WatchlistTable({
               onClick={() => onSelect(ticker)}
             >
               <td className="ticker-cell">{ticker}</td>
-              <td className="price-cell" data-flash={direction}>
+              <td className="price-cell" data-flash={marketOpen ? direction : null}>
                 ${latest.price.toFixed(2)}
               </td>
               <td>
