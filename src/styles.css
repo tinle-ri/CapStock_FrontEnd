@@ -251,3 +251,47 @@ body {
   padding: 2px 6px;
   border-radius: 4px;
 }
+
+.trend-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.trend-chart-header h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+
+.trend-chart-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+}
+
+.reset-zoom-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(124, 156, 255, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(124, 156, 255, 0.3);
+  border-radius: 6px;
+  padding: 0.25rem 0.65rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.reset-zoom-btn:hover {
+  background: rgba(124, 156, 255, 0.2);
+  border-color: var(--accent);
+}
+
+.reset-zoom-btn .reset-icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
