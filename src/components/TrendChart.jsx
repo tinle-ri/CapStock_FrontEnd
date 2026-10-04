@@ -139,7 +139,7 @@ export default function TrendChart({ ticker, history }) {
       <div className="trend-chart-header">
         <div>
           <h2>{ticker} trend</h2>
-          <span className="trend-chart-hint">Click & drag horizontally to zoom timeframe</span>
+          <span className="trend-chart-hint">Click &amp; drag horizontally to zoom timeframe</span>
         </div>
         {isZoomed && (
           <button
