@@ -148,7 +148,7 @@ export default function TrendChart({ ticker, history }) {
             onClick={handleResetZoom}
             title="Reset to full view"
           >
-            <span className="reset-icon">?</span> Reset
+            <span className="reset-icon">↺</span> Reset
           </button>
         )}
       </div>
