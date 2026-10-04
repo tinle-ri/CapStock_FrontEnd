@@ -71,7 +71,7 @@ export default function TrendChart({ ticker, history }) {
     ],
   };
 
-  const chartOptions = {
+  const chartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
     animation: {
@@ -127,7 +127,7 @@ export default function TrendChart({ ticker, history }) {
         },
       },
     },
-  };
+  }), []);
 
   const handleResetZoom = () => {
     if (chartRef.current) {
