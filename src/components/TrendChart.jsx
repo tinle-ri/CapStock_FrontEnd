@@ -31,46 +31,6 @@ export default function TrendChart({ ticker, history }) {
     return history;
   }, [history]);
 
-  if (!ticker) {
-    return (
-      <div className="trend-chart-placeholder">
-        Click a ticker in the table to see its trend chart.
-      </div>
-    );
-  }
-
-  if (rawData.length < 2) {
-    return (
-      <div className="trend-chart-placeholder">
-        Not enough data yet for {ticker} - waiting for more ticks.
-      </div>
-    );
-  }
-
-  const chartData = {
-    labels: rawData.map((p) =>
-      new Date(p.timestamp).toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      })
-    ),
-    datasets: [
-      {
-        label: ticker,
-        data: rawData.map((p) => p.price),
-        borderColor: '#7c9cff',
-        borderWidth: 2,
-        pointRadius: 0,
-        pointHoverRadius: 5,
-        pointHoverBackgroundColor: '#7c9cff',
-        pointHoverBorderColor: '#ffffff',
-        pointHoverBorderWidth: 2,
-        tension: 0.2,
-      },
-    ],
-  };
-
   const chartOptions = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
@@ -128,6 +88,46 @@ export default function TrendChart({ ticker, history }) {
       },
     },
   }), []);
+
+  if (!ticker) {
+    return (
+      <div className="trend-chart-placeholder">
+        Click a ticker in the table to see its trend chart.
+      </div>
+    );
+  }
+
+  if (rawData.length < 2) {
+    return (
+      <div className="trend-chart-placeholder">
+        Not enough data yet for {ticker} - waiting for more ticks.
+      </div>
+    );
+  }
+
+  const chartData = {
+    labels: rawData.map((p) =>
+      new Date(p.timestamp).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      })
+    ),
+    datasets: [
+      {
+        label: ticker,
+        data: rawData.map((p) => p.price),
+        borderColor: '#7c9cff',
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: '#7c9cff',
+        pointHoverBorderColor: '#ffffff',
+        pointHoverBorderWidth: 2,
+        tension: 0.2,
+      },
+    ],
+  };
 
   const handleResetZoom = () => {
     if (chartRef.current) {
