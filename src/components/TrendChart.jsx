@@ -74,7 +74,9 @@ export default function TrendChart({ ticker, history }) {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    animation: false,
+    animation: {
+      duration: 0,
+    },
     interaction: {
       mode: 'index',
       intersect: false,
