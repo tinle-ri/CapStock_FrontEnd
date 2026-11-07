@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Socket } from "phoenix";
 import WatchlistTable from "./components/WatchlistTable";
 import TrendChart from "./components/TrendChart";
+import TradingPanel from "./components/TradingPanel";
 import { fetchStocks } from "./api";
 import { TICKERS, HISTORY_LIMIT, WS_URL } from "./config";
 import { isMarketOpen, hoursUntilNextOpen } from "./marketHours";
@@ -126,6 +127,7 @@ export default function App() {
         ticker={selected}
         history={selected ? data[selected] : null}
       />
+      <TradingPanel data={data} />
     </div>
   );
 }

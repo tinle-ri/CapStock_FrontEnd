@@ -295,3 +295,120 @@ body {
   font-size: 0.95rem;
   line-height: 1;
 }
+
+/* --- Trading panel (step F); mirrors the LiveView panel's layout --- */
+.trade-panel {
+  margin-top: 2.5rem;
+}
+
+.trade-panel h2 {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.trade-panel h3 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.trade-hint {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin: 0.25rem 0 0;
+}
+
+.order-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.order-form label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.875rem;
+  gap: 0.25rem;
+}
+
+.order-form select,
+.order-form input {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+  font-family: var(--font-mono);
+}
+
+.order-form input {
+  width: 7rem;
+}
+
+.buy-btn,
+.sell-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 0.45rem 1rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+}
+
+.buy-btn {
+  background: #059669;
+}
+
+.sell-btn {
+  background: #e11d48;
+}
+
+.buy-btn:disabled,
+.sell-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.order-message {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.order-message[data-kind='ok'] {
+  color: var(--up);
+}
+
+.order-message[data-kind='error'] {
+  color: var(--down);
+}
+
+.cash {
+  margin-top: 1.5rem;
+  font-size: 1.1rem;
+}
+
+.cash strong,
+.positions-table .num,
+.order-list {
+  font-variant-numeric: tabular-nums;
+}
+
+.positions-table tbody tr {
+  cursor: default;
+}
+
+.positions-table .num {
+  text-align: right;
+}
+
+.order-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
