@@ -26,9 +26,14 @@ function currentCents(data, ticker) {
   return latest ? Math.round(latest.price * 100) : null;
 }
 
-// "2026-11-06T14:03:21..." -> "14:03:21" (UTC, like the LiveView panel).
+// "2026-11-06T14:03:21Z" -> the viewer's local time, e.g. "06:03:21 AM" in Seattle.
+// The same toLocaleTimeString call as the LiveView panel's LocalTime hook, so both match.
 function formatTime(iso) {
-  return String(iso).split("T")[1].slice(0, 8);
+  return new Date(iso).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 export default function TradingPanel({ data }) {
